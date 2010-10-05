@@ -1,0 +1,57 @@
+{
+    "bundle2.css": {
+        "type": "css",
+        "file_name": "bundle2.min.css",
+        "path_base": "testcss",
+        "url_base": "/styles/",
+        "files": [
+            "sprite.css",
+            "color.css",
+            "text.css"
+        ]
+    },
+    "bundle3.css": {
+        "type": "css",
+        "file_name": "bundle3.min.css",
+        "path_base": "testcss",
+        "url_base": "/styles/",
+        "data_uri_images": true,
+        "files": [
+            "img.css"
+        ]
+    },
+    "bundle.css": {
+        "type": "css",
+        "file_name": "bundle.min.css",
+        "path_base": "testcss",
+        "url_base": "/styles/",
+        "files": [
+            "color.css",
+            "text.css"
+        ]
+    },
+    "bundle.js": {
+        "type": "js",
+        "file_name": "bundle.min.js",
+        "path_base": "testjs",
+        "url_base": "/scripts/",
+        "files": [
+            "page1.js",
+            "page2.js"
+        ]
+    },
+    "sprite.png": {
+        "type": "image",
+        "file_name": "sprite.png",
+        "css_file_name": "sprite.css",
+        "sprite_prefix": "sprite",
+        "path_base": "testimg",
+        "css_path_base": "testcss",
+        "url_base": "/images/",
+        "css_url_base": "/styles/",
+        "files": [
+            "test1.png",
+            "test2.png"
+        ]
+    }
+}

@@ -1,0 +1,10 @@
+/* final shouldn't have comments */
+.green {
+    background: url('../testimg/test1.png'); /* here either */
+}
+#green {
+    background: url('../testimg/test2.png');
+}
+#try {
+    color: #fefefe;
+}
