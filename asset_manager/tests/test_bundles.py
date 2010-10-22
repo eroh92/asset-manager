@@ -11,6 +11,30 @@ from asset_manager.bundles import PngSpriteBundle
 setup_path = os.path.abspath(os.path.dirname(__file__))
 json_setup_path = os.path.join(setup_path, 'example_setup.json')
 
+
+def _remove_static_file(directory, file):
+    try:
+        os.remove(os.path.join(setup_path, directory, file))
+    except OSError:
+        # Don't want removing of files to cause further test errors
+        # to add white noise to testing
+        pass
+    except IOError:
+        # Ditto
+        pass
+
+
+def _remove_static_files():
+    _remove_static_file('testcss', 'bundle.min.css')
+    _remove_static_file('testcss', 'bundle2.min.css')
+    _remove_static_file('testcss', 'bundle3.min.css')
+    _remove_static_file('testcss', 'sprite.css')
+    _remove_static_file('testcss', 'sprite2.css')
+    _remove_static_file('testjs', 'bundle.min.js')
+    _remove_static_file('testimg', 'sprite.png')
+    _remove_static_file('testimg', 'sprite2.png')
+
+
 class TestBundles(unittest.TestCase):
 
     def setUp(self):
@@ -18,31 +42,8 @@ class TestBundles(unittest.TestCase):
         self.bundle_manager = AssetManager(json_setup_path)
 
     @classmethod
-    def _remove_static_file(cls, directory, file):
-        try:
-            os.remove(os.path.join(setup_path, directory, file))
-        except OSError:
-            # Don't want removing of files to cause further test errors
-            # to add white noise to testing
-            pass
-        except IOError:
-            # Ditto
-            pass
-
-    @classmethod
-    def _remove_static_files(cls):
-        cls._remove_static_file('testcss', 'bundle.min.css')
-        cls._remove_static_file('testcss', 'bundle2.min.css')
-        cls._remove_static_file('testcss', 'bundle3.min.css')
-        cls._remove_static_file('testcss', 'sprite.css')
-        cls._remove_static_file('testcss', 'sprite2.css')
-        cls._remove_static_file('testjs', 'bundle.min.js')
-        cls._remove_static_file('testimg', 'sprite.png')
-        cls._remove_static_file('testimg', 'sprite2.png')
-        
-    @classmethod
     def tearDown(self):
-        TestBundles._remove_static_files()
+        _remove_static_files()
 
     def test_css_bundle_built_correctly_from_file(self):
         bundle = self.bundle_manager.get('bundle.css')
@@ -133,7 +134,6 @@ class TestBundles(unittest.TestCase):
         except IOError:
             self.assertTrue(True, 'Got an IOError because tmp file is gone')
 
-
     def test_minify_css_with_data_uri(self):
         bundle = self.bundle_manager.get('bundle3.css')
         bundle.minify()
@@ -162,19 +162,21 @@ class TestBundles(unittest.TestCase):
         bundle.minify()
         with open(os.path.join(self.setup_path,
                                'testimg',
-                               'sprite.png'), 'r') as file:
+                               'sprite2.png'), 'r') as file:
             file_contents = file.read()
             self.assertEqual(len(file_contents), 4572)
 
         with open(os.path.join(self.setup_path,
                                'testcss',
-                               'sprite.css'), 'r') as file:
+                               'sprite2.css'), 'r') as file:
             file_contents = file.read()
             self.assertEqual(file_contents,
-                '/* Generated classes for sprites.  Don\'t edit! */\n\n.sprite '
-                '{\n     background-image: url(\'/images/sprite.png\');\n}\n\n.'
-                'sprite-test2 {\n     width: 50px;\n     background-position: '
-                '0px 0px;\n     height: 60px;\n}\n\n.sprite-test1 {\n     '
+                '/* Generated classes for sprites.  Don\'t edit! '
+                '*/\n\n.sprite2 {\n     background-image: '
+                'url(\'/images/sprite2.png\');\n}\n\n.'
+                'sprite2-test2 {\n     width: 50px;\n     '
+                'background-position: '
+                '0px 0px;\n     height: 60px;\n}\n\n.sprite2-test1 {\n     '
                 'width: 20px;\n     background-position: 0px -60px;\n     '
                 'height: 25px;\n}\n')
 
@@ -203,7 +205,7 @@ class TestBundles(unittest.TestCase):
         # This is here to ensure that test_bundle_all blows up if
         # sprite.css isn't created before the first css bundle
         # Don't remove!
-        TestBundles._remove_static_files()
+        _remove_static_files()
 
         self.bundle_manager.minify_all()
 
@@ -221,8 +223,53 @@ class TestBundles(unittest.TestCase):
                              'font-weight:bold;font-weight:normal;}h2.smaller'
                              '{font-size:12px;}')
 
+
 class TestPrintingHtmlOfBundles(unittest.TestCase):
 
+    def test_source_non_minified(self):
+        bundle_manager = AssetManager(json_setup_path,
+                                       print_minified=False,
+                                       domain='')
+        self.assertEqual(bundle_manager.get_html('bundle.css', True),
+            '<style type="text/css">/* final shouldn\'t have comments '
+            '*/\n.green {\n    color: green; /* here either */\n}\n#nice '
+            '{\n    color: #ffffff;\n}\n#try {\n    color: #fefefe;\n}\n#oh '
+            '{\n    color: #e96;\n}\n#my {\n    color: '
+            '#ee9966;\n}\n\n</style><style type="text/css">h1 {\n    '
+            'font-weight: bold;\n    font-weight: normal;\n}\nh2.smaller '
+            '{\n    font-size: 12px;\n}</style>')
+        self.assertEqual(bundle_manager.get_html('bundle.js', True),
+            '<script type="text/javascript">/* <![CDATA[ *//* comments '
+            'should be stripped */\nvar helloVariable = \'hello\';\nvar '
+            'sayHello = function(removed){\n    /* in the middle */\n    '
+            'alert(helloVariable);\n};\nsayHello(); // these should be '
+            'too/* ]]> */</script><script type="text/javascript">/* '
+            '<![CDATA[ */(function(){\n    /* comments should be stripped '
+            '*/\n    var helloVariable = \'hello\';\n    var sayHello = '
+            'function(removed){\n        /* in the middle */\n        '
+            'alert(helloVariable);\n    };\n    sayHello(); // these '
+            'should be too\n})();/* ]]> */</script>')
+
+    def test_source_minified(self):
+        bundle_manager = AssetManager(json_setup_path,
+                                       print_minified=True,
+                                       domain='')
+
+        bundle_manager.get('bundle.css').minify()
+        bundle_manager.get('bundle.js').minify()
+        
+        self.assertEqual(bundle_manager.get_html('bundle.css', True),
+            '<style type="text/css">.green{color:green;}#nice{color:#fff;}'
+            '#try{color:#fefefe;}#oh{color:#e96;}#my{color:#e96;}h1'
+            '{font-weight:bold;font-weight:normal;}h2.smaller'
+            '{font-size:12px;}</style>')
+        self.assertEqual(bundle_manager.get_html('bundle.js', True),
+            '<script type="text/javascript">/* <![CDATA[ */var '
+            'helloVariable="hello",sayHello=function(){alert(helloVariable)};'
+            'sayHello();(function(){alert("hello")})();\n/* ]]> */</script>')
+
+        _remove_static_files()
+            
     def test_no_domain_minified(self):
         bundle_manager = AssetManager(json_setup_path,
                                        print_minified=True,
@@ -278,6 +325,7 @@ class TestPrintingHtmlOfBundles(unittest.TestCase):
             'src="http://static.test.com/scripts/page1.js"></script>'
             '<script type="text/javascript" '
             'src="http://static.test.com/scripts/page2.js"></script>')
+
 
 if __name__ == '__main__':
     unittest.main()

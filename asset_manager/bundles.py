@@ -11,11 +11,13 @@ import json
 from asset_manager.bin_packing import Box, pack_boxes
 from asset_manager.datauris import add_data_uris_to_css_file
 
+
 class InvalidBundleType(Exception):
 
     def __init__(self, type_):
         msg = "Invalid bundle type: %r" % type_
         super(InvalidBundleType, self).__init__(msg)
+
 
 class InvalidHtmlPrintableType(Exception):
 
@@ -23,8 +25,10 @@ class InvalidHtmlPrintableType(Exception):
         msg = "Invalid html printable type: %r" % type_
         super(InvalidHtmlPrintableType, self).__init__(msg)
 
+
 def png_bundled_first(bundle):
     return 0 if bundle.type == 'image' else 1
+
 
 def concatenate_files(paths):
     """Generate the contents of several files in 8K blocks."""
@@ -34,6 +38,7 @@ def concatenate_files(paths):
             while buffer:
                 yield buffer
                 buffer = input.read(8192)
+
 
 class AssetManager(object):
 
@@ -45,8 +50,10 @@ class AssetManager(object):
     def get(self, key):
         return self.bundles.get(key)
 
-    def get_html(self, key):
-        return self.bundles.get(key).get_html(self.print_minified, self.domain)
+    def get_html(self, key, print_source=False):
+        return self.bundles.get(key).get_html(self.print_minified,
+                                              self.domain,
+                                              print_source)
 
     def minify_all(self):
         for bundle in sorted(self.bundles.values(), key=png_bundled_first):
@@ -153,18 +160,34 @@ class Bundle(object):
         return self.make_url(self.file_name)
 
     @property
+    def _html_source_template(self):
+        raise InvalidHtmlPrintableType
+
+    @property
     def _html_template(self):
         raise InvalidHtmlPrintableType
 
-    def get_html(self, print_minified, domain):
-        if print_minified:
-            files = [self.make_url(self.file_name, domain)]
-        else:
-            files = [self.make_url(f, domain) for f in self.files]
+    def get_html(self, print_minified, domain, print_source):
         elements = []
-        for file in files:
-            elements.append(self._html_template.format(url=file))
+        if print_source:
+            if print_minified:
+                files = [self.bundle_path]
+            else:
+                files = self.full_path_files
+            for file in files:
+                with open(file) as f:
+                    file_contents = f.read()
+                    elements.append(
+                        self._html_source_template.format(src=file_contents))
+        else:
+            if print_minified:
+                files = [self.make_url(self.file_name, domain)]
+            else:
+                files = [self.make_url(f, domain) for f in self.files]
+            for file in files:
+                elements.append(self._html_template.format(url=file))
         return ''.join(elements)
+
 
 class JavascriptBundle(Bundle):
 
@@ -205,6 +228,11 @@ class JavascriptBundle(Bundle):
     @property
     def _html_template(self):
         return '<script type="text/javascript" src="{url}"></script>'
+
+    @property
+    def _html_source_template(self):
+        return '<script type="text/javascript">/* <![CDATA[ */{src}/* ]]> */' \
+               '</script>'
 
 
 class CssBundle(Bundle):
@@ -250,6 +278,11 @@ class CssBundle(Bundle):
     @property
     def _html_template(self):
         return '<link rel="stylesheet" type="text/css" href="{url}">'
+
+    @property
+    def _html_source_template(self):
+        return '<style type="text/css">{src}</style>'
+
 
 class PngSpriteBundle(Bundle):
 
