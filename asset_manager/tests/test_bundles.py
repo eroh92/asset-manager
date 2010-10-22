@@ -8,7 +8,7 @@ from asset_manager.bundles import JavascriptBundle
 from asset_manager.bundles import CssBundle
 from asset_manager.bundles import PngSpriteBundle
 
-setup_path = os.path.dirname(__file__)
+setup_path = os.path.abspath(os.path.dirname(__file__))
 json_setup_path = os.path.join(setup_path, 'example_setup.json')
 
 class TestBundles(unittest.TestCase):
@@ -25,6 +25,9 @@ class TestBundles(unittest.TestCase):
             # Don't want removing of files to cause further test errors
             # to add white noise to testing
             pass
+        except IOError:
+            # Ditto
+            pass
 
     @classmethod
     def _remove_static_files(cls):
@@ -32,8 +35,10 @@ class TestBundles(unittest.TestCase):
         cls._remove_static_file('testcss', 'bundle2.min.css')
         cls._remove_static_file('testcss', 'bundle3.min.css')
         cls._remove_static_file('testcss', 'sprite.css')
+        cls._remove_static_file('testcss', 'sprite2.css')
         cls._remove_static_file('testjs', 'bundle.min.js')
         cls._remove_static_file('testimg', 'sprite.png')
+        cls._remove_static_file('testimg', 'sprite2.png')
         
     @classmethod
     def tearDown(self):
@@ -151,6 +156,27 @@ class TestBundles(unittest.TestCase):
                              'var helloVariable="hello",sayHello=function(){'
                              'alert(helloVariable)};sayHello();(function(){'
                              'alert("hello")})();\n')
+
+    def test_minify_image_in_sub_folders(self):
+        bundle = self.bundle_manager.get('sprite2.png')
+        bundle.minify()
+        with open(os.path.join(self.setup_path,
+                               'testimg',
+                               'sprite.png'), 'r') as file:
+            file_contents = file.read()
+            self.assertEqual(len(file_contents), 4572)
+
+        with open(os.path.join(self.setup_path,
+                               'testcss',
+                               'sprite.css'), 'r') as file:
+            file_contents = file.read()
+            self.assertEqual(file_contents,
+                '/* Generated classes for sprites.  Don\'t edit! */\n\n.sprite '
+                '{\n     background-image: url(\'/images/sprite.png\');\n}\n\n.'
+                'sprite-test2 {\n     width: 50px;\n     background-position: '
+                '0px 0px;\n     height: 60px;\n}\n\n.sprite-test1 {\n     '
+                'width: 20px;\n     background-position: 0px -60px;\n     '
+                'height: 25px;\n}\n')
 
     def test_minify_image(self):
         bundle = self.bundle_manager.get('sprite.png')

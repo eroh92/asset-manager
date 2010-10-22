@@ -19,6 +19,10 @@ setup(
                 "JavaScript and CSS while also making sprites "
                 "from your images.",
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        '': ['bin/*.jar']
+    },
     zip_safe=False,
     url='http://github.com/eroh92/asset_manager/',
     classifiers=[

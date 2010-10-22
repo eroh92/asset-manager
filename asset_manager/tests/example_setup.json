@@ -53,5 +53,19 @@
             "test1.png",
             "test2.png"
         ]
+    },
+    "sprite2.png": {
+        "type": "image",
+        "file_name": "sprite2.png",
+        "css_file_name": "sprite2.css",
+        "sprite_prefix": "sprite2",
+        "path_base": "testimg",
+        "css_path_base": "testcss",
+        "url_base": "/images/",
+        "css_url_base": "/styles/",
+        "files": [
+            "foldertest/",
+            "test2.png"
+        ]
     }
 }

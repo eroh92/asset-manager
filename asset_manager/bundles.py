@@ -56,7 +56,7 @@ class AssetManager(object):
     def _build_bundles_from_config(cls, file_name):
         bundles = {}
         with open(file_name, 'r') as file:
-            directory = os.path.dirname(file_name)
+            directory = os.path.abspath(os.path.dirname(file_name))
             dict_bundles = json.loads(file.read())
             for key, bundle in dict_bundles.items():
                 bundle['path_base'] = os.path.join(directory,
@@ -93,10 +93,11 @@ class Bundle(object):
         new_files = []
         for file in files:
             # add all files in directory
-            if os.path.isdir(path_base + file):
+            path = os.path.join(path_base, file)
+            if os.path.isdir(path):
                 if not file.endswith("/"):
                     raise ValueError("Bundle URLs must end with a '/'.")
-                for new_file in os.listdir(path_base + file):
+                for new_file in os.listdir(path):
                     new_files.append(file + new_file)
             else:
                 new_files.append(file)
