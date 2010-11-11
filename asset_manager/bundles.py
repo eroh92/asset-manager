@@ -277,7 +277,7 @@ class CssBundle(Bundle):
 
     @property
     def _html_template(self):
-        return '<link rel="stylesheet" type="text/css" href="{url}">'
+        return '<link rel="stylesheet" type="text/css" href="{url}"/>'
 
     @property
     def _html_source_template(self):
