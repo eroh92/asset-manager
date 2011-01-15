@@ -349,9 +349,9 @@ class PngSpriteBundle(Bundle):
             if proc.returncode != 0:
                 raise Exception('pngcrush returned error code: %r\nOutput was:\n\n'
                                 '%s' % (proc.returncode, proc.stdout.read()))
+            shutil.move(tmp_path, sprite_path)
         except OSError:
             pass
-        shutil.move(tmp_path, sprite_path)
 
     def generate_css(self, packing):
         """Generate the background offset CSS rules."""
