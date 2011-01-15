@@ -18,6 +18,7 @@ setup(
     description="Application that manages and minifies your "
                 "JavaScript and CSS while also making sprites "
                 "from your images.",
+    install_requires=['PIL'],
     packages=find_packages(),
     include_package_data=True,
     package_data={
